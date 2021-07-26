@@ -1,0 +1,17 @@
+
+
+# prepare_data_multithread.sh -> untars subject files; extracts and renames T1, tumor mask, fMRI; fixes orientation of T1; creates brain mask
+
+# copy_tumor_mask.sh -> copy Anders' clean tumor masks from Edinburgh folder to data folder
+
+# manual -> move irrelavant subjects to other_subjects folder; create fmri folder with FSL analysis templates and fMRI paradigms;
+
+# analyze_all_subjects.sh -> run fMRI activation mapping in FSL for all subjects (time-consuming)
+
+# transform_motor_2.sh -> transform T1, brain mask, tumor mask, z-maps to 1mm isotropic
+
+# nifti_to_dicom.m -> create cube volumes for T1, tumor mask, zmaps; threshold zmaps; convert T1 to dicom
+
+# manual -> copy cube tumor mask, activation maps, T1 DICOM to new folder (blah); start CENIIT environment (numpy matplotlib scikit-image nibabel pydicom)
+
+# create_RTSTRUCTS.sh -> create RTSTRUCTS from tumor mask and activation maps
