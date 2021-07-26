@@ -83,7 +83,7 @@ process_subj () {
 
 }
 
-for subj in ?????; do
+for subj in [0-9][0-9][0-9][0-9][0-9] ; do
 
   # Process subject
   process_subj $subj &

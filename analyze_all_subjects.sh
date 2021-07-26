@@ -13,7 +13,7 @@ maxJobs=6 # Max number of parallel jobs
 dirData="/flush/davab27/CENIIT/data"
 dirTemplate="$dirData/fmri/motor"
 
-for subject in ????? ; do
+for subject in [0-9][0-9][0-9][0-9][0-9] ; do
 
 	mkdir -p $subject/fmri_out
 
@@ -58,7 +58,7 @@ for subject in ????? ; do
 	done
 
 	# Remove design files (they are available inside each feat folder)
-	rm $subject/*.fsf
+	rm $subject/fmri_out/*.fsf
 
 done
 

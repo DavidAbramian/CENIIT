@@ -16,48 +16,48 @@ def concatenate_coordinates(coordinates_x, coordinates_y, coordinates_z):
     vector = np.zeros((len(coordinates_x)*3,1))
 
     for i in range(len(coordinates_x)):
-        vector[i*3+0] = coordinates_x[i] 
+        vector[i*3+0] = coordinates_x[i]
         vector[i*3+1] = coordinates_y[i]
         vector[i*3+2] = coordinates_z[i]
 
     return vector
 
 def find_first_slice_position(dcms):
-    
-    patientStartingZ = 0 
+
+    patientStartingZ = 0
     for idx, dcm in enumerate(dcms):
         ds = pydicom.dcmread(dcm, stop_before_pixels=True)
         if not 'ImagePositionPatient' in ds or ds.ImagePositionPatient is None:
             continue
         if ds.ImagePositionPatient[2] <= patientStartingZ or idx==0:
             patientStartingZ = ds.ImagePositionPatient[2]
-    
+
     return patientStartingZ
 
 def convert(input_nifti_path: str, input_dicom_path: str, output_dicom_path: str, ROI_name: str, ROI_color: str):
-    
+
     #---------------
     # First DICOM part
     #---------------
 
     # Get number of DICOM files in DICOM path
-    dicomFiles = next(os.walk(input_dicom_path))[2] 
+    dicomFiles = next(os.walk(input_dicom_path))[2]
     numberOfDicomImages = len(dicomFiles)
     numberOfROIs = 1   # The whole volume is 1 ROI, assuming 1 tumour per patient
-    
+
     # Load template DICOM file header (first file)
-    ds = pydicom.dcmread(input_dicom_path + "%s"%dicomFiles[0],stop_before_pixels=True) 
+    ds = pydicom.dcmread(input_dicom_path + "%s"%dicomFiles[0],stop_before_pixels=True)
 
     xPixelSize = ds.PixelSpacing[0]
     yPixelSize = ds.PixelSpacing[1]
     zPixelSize = ds.SliceThickness
-    
+
     print("Each voxel is ",xPixelSize," x ",yPixelSize," x ",zPixelSize)
 
     # Find position of first slice
     patientPosition = ds.ImagePositionPatient
     patientStartingZ = find_first_slice_position([input_dicom_path + '%s'%_ for _ in dicomFiles])
-    
+
     print('Patient position is ', patientPosition[:2])
     print('First slice at ', patientStartingZ)
 
@@ -72,31 +72,33 @@ def convert(input_nifti_path: str, input_dicom_path: str, output_dicom_path: str
 
     AllCoordinates = []
 
-    if len(volume.shape)==4: 
+    if len(volume.shape)==4:
         volume = volume[...,0]
         print('Assuming the first channel of the input nifti is the seg mask.')
     elif len(volume.shape)==3:
         print('Segmentation mask is same size of the patient image volume.')
     else:
         print('Dimension not supported.')
-            
+
     # Loop over slices in volume, get contours for each slice
     for slice in range(volume.shape[2]):
-        
+
         AllCoordinatesThisSlice = []
 
-        image = volume[:,:,slice] 
-        
+        image = volume[:,:,slice]
+
+        image = np.fliplr(image)
+
         # Get contours in this slice using scikit-image
         contours = measure.find_contours(image, 0.5)
-        
+
         # Save contours for later use
         for n, contour in enumerate(contours):
             #print("n is ",n,"for slice ",slice)
             nCoordinates = len(contour[:,0])
             #print("number of coordinates is ",len(contour[:,0])*3," for contour ",n," for slice ",slice)
-            zcoordinates = slice * np.ones((nCoordinates,1)) 
-            
+            zcoordinates = slice * np.ones((nCoordinates,1))
+
             # Add patient position offset
             reg_contour = np.append(contour, zcoordinates, -1)
             # Assume no other orientations for simplicity
@@ -108,11 +110,11 @@ def convert(input_nifti_path: str, input_dicom_path: str, output_dicom_path: str
             #coordinates = concatenate_coordinates(contour[:,0] * xPixelSize, contour[:,1] * yPixelSize, zcoordinates * zPixelSize)
             coordinates = concatenate_coordinates(*reg_contour.T)
             coordinates = np.squeeze(coordinates)
-            
+
             AllCoordinatesThisSlice.append(coordinates)
 
         AllCoordinates.append(AllCoordinatesThisSlice)
-    
+
     #print("All coordinates has length ",len(AllCoordinates))
     #print("All coordinates slice 0 has length ",len(AllCoordinates[0]))
     #print("All coordinates slice 1 has length ",len(AllCoordinates[1]))
@@ -154,7 +156,7 @@ def convert(input_nifti_path: str, input_dicom_path: str, output_dicom_path: str
 
     # Loop over all DICOM images
     for image in range(1,numberOfDicomImages+1):
-        dstemp = pydicom.dcmread(input_dicom_path + "%s"%dicomFiles[image-1],stop_before_pixels=True) 
+        dstemp = pydicom.dcmread(input_dicom_path + "%s"%dicomFiles[image-1],stop_before_pixels=True)
         # Contour Image Sequence: Contour Image
         contour_image = Dataset()
         contour_image.ReferencedSOPClassUID = dstemp.SOPClassUID      # '1.2.840.10008.5.1.4.1.1.2'
@@ -222,7 +224,7 @@ def convert(input_nifti_path: str, input_dicom_path: str, output_dicom_path: str
                 contour.ContourImageSequence = contour_image_sequence
 
                 # Load the corresponding dicom file to get the SOPInstanceUID
-                dstemp = pydicom.dcmread(input_dicom_path + "%s"%dicomFiles[slice],stop_before_pixels=True) 
+                dstemp = pydicom.dcmread(input_dicom_path + "%s"%dicomFiles[slice],stop_before_pixels=True)
 
                 # Contour Image Sequence: Contour Image 1
                 contour_image = Dataset()
@@ -253,15 +255,15 @@ def convert(input_nifti_path: str, input_dicom_path: str, output_dicom_path: str
         rtroi_observations.RTROIInterpretedType = ''
         rtroi_observations.ROIInterpreter = ''
         rtroi_observations_sequence.append(rtroi_observations)
-   
+
     # Add RTSTRUCT specifics
     ds.Modality = 'RTSTRUCT' # So the GammaPlan software can recognize RTSTRUCT
     ds.SOPClassUID = '1.2.840.10008.5.1.4.1.1.481.3' # So the GammaPlan software can recognize RTSTRUCT
-    
+
     random_str_1 = "%0.8d" % random.randint(0,99999999)
     random_str_2 = "%0.8d" % random.randint(0,99999999)
     ds.SeriesInstanceUID = "1.2.826.0.1.3680043.2.1125."+random_str_1+".1"+random_str_2 # Just some random UID
-    
+
     ds.save_as(output_dicom_path + ROI_name + "_RTSTRUCT.dcm")
 
 def get_parser():
@@ -278,5 +280,3 @@ def get_parser():
 if __name__ == "__main__":
     p = get_parser()
     convert(p.input_nifti, p.input_dicom, p.output_dicom, p.ROI_name, p.ROI_color)
-
-
