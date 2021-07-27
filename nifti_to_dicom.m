@@ -25,7 +25,7 @@ nSubjects = length(dirSubj);
 fileDICOM = 'template.dcm';
 infoDICOM = dicominfo(fileDICOM);
 
-for s = 1:1
+for s = 1:nSubjects
     
     subject_id = dirSubj(s).name;
     
@@ -41,7 +41,7 @@ for s = 1:1
         
         % Put volume in 256 cube, pad with zeros
         tmp = zeros(256,256,256);
-        tmp(:,1+20:202+20,:) = vol;
+        tmp(:,1+20:203+20,:) = vol;
         vol = tmp;
         info.ImageSize = [256 256 256];
         info.raw.dim = [3 256 256 256 1 1 1 1];
@@ -76,7 +76,7 @@ for s = 1:1
 
     % Put volume in 256 cube, pad with zeros
     tmp = zeros(256,256,256);
-    tmp(:,1+20:202+20,:) = vol;
+    tmp(:,1+20:203+20,:) = vol;
     vol = tmp;
     info.ImageSize = [256 256 256];
     info.raw.dim = [3 256 256 256 1 1 1 1];
@@ -96,7 +96,7 @@ for s = 1:1
 
     % Put volume in 256 cube, pad with zeros
     tmp = zeros(256,256,256);
-    tmp(:,1+20:202+20,:) = vol;
+    tmp(:,1+20:203+20,:) = vol;
     vol = tmp;
     info.ImageSize = [256 256 256];
     info.raw.dim = [3 256 256 256 1 1 1 1];
@@ -122,7 +122,7 @@ for s = 1:1
     
     % Put volume in 256 cube, pad with zeros
     tmp = zeros(256,256,256);
-    tmp(:,1+20:202+20,:) = vol;
+    tmp(:,1+20:203+20,:) = vol;
     vol = tmp;
     
     % Split single 3D volume into one DICOM file per slice

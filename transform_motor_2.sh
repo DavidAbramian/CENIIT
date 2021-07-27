@@ -19,23 +19,38 @@ wait_finish () {
 	done
 }
 
+# Create new nifti header with isotropic voxels
+if [[ ! -e T1_1mm_ref.nii.gz ]] ; then
+	fslcreatehd 256 203 256 1 1 1 1 1 0 0 0 16  T1_1mm_ref.nii.gz
+fi
+
 # for subject in ?????; do
 for subject in [0-9][0-9][0-9][0-9][0-9] ; do
 
 	# Interpolate T1 volume to get isotropic
 	echo $subject T1
-	flirt -in ${subject}/anat/T1.nii.gz -ref ${subject}/anat/T1.nii.gz -applyisoxfm 1.0 -out ${subject}/anat/T1_isotropic.nii.gz -interp sinc -datatype float &
+	flirt -in ${subject}/anat/T1.nii.gz -applyxfm -init /usr/local/fsl/etc/flirtsch/ident.mat -out ${subject}/anat/T1_isotropic.nii.gz -paddingsize 0.0 -interp sinc -datatype float -ref T1_1mm_ref.nii.gz &
 	check_jobs
-
-	# # Interpolate brainmask volume to get isotropic voxels
-	# echo $subject brainmask
-	# flirt -in ${subject}/anat/brainmask.nii.gz -ref ${subject}/anat/brainmask.nii.gz -applyisoxfm 1.0 -out ${subject}/anat/brainmask_isotropic.nii.gz -interp nearestneighbour -datatype float &
-	# check_jobs
 
 	# Interpolate tumor mask volume to get isotropic voxels
 	echo $subject tumor_mask
-	flirt -in ${subject}/anat/tumor_mask_clean.nii.gz -ref ${subject}/anat/tumor_mask_clean.nii.gz -applyisoxfm 1.0 -out ${subject}/anat/tumor_mask_isotropic.nii.gz -interp trilinear -datatype float &
+	flirt -in ${subject}/anat/tumor_mask_clean.nii.gz -applyxfm -init /usr/local/fsl/etc/flirtsch/ident.mat -out ${subject}/anat/tumor_mask_isotropic.nii.gz -paddingsize 0.0 -interp trilinear -datatype float -ref T1_1mm_ref.nii.gz &
 	check_jobs
+
+	# # Interpolate T1 volume to get isotropic
+	# echo $subject T1
+	# flirt -in ${subject}/anat/T1.nii.gz -ref ${subject}/anat/T1.nii.gz -applyisoxfm 1.0 -out ${subject}/anat/T1_isotropic.nii.gz -interp sinc -datatype float &
+	# check_jobs
+	#
+	# # # Interpolate brainmask volume to get isotropic voxels
+	# # echo $subject brainmask
+	# # flirt -in ${subject}/anat/brainmask.nii.gz -ref ${subject}/anat/brainmask.nii.gz -applyisoxfm 1.0 -out ${subject}/anat/brainmask_isotropic.nii.gz -interp nearestneighbour -datatype float &
+	# # check_jobs
+	#
+	# # Interpolate tumor mask volume to get isotropic voxels
+	# echo $subject tumor_mask
+	# flirt -in ${subject}/anat/tumor_mask_clean.nii.gz -ref ${subject}/anat/tumor_mask_clean.nii.gz -applyisoxfm 1.0 -out ${subject}/anat/tumor_mask_isotropic.nii.gz -interp trilinear -datatype float &
+	# check_jobs
 
 done
 
