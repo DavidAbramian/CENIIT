@@ -9,6 +9,16 @@
 
 
 maxJobs=6 # Max number of parallel jobs
+check_jobs () {
+	while [[ $(jobs -r | wc -l) -ge $maxJobs ]]; do
+		sleep 1
+	done
+}
+wait_finish () {
+	while [[ $(jobs -r | wc -l) -gt 0 ]]; do
+	  sleep 1
+	done
+}
 
 dirData="/flush/davab27/CENIIT/data"
 dirTemplate="$dirData/fmri/motor"
@@ -49,9 +59,7 @@ for subject in [0-9][0-9][0-9][0-9][0-9] ; do
 			# Run analyses in parallel
 			feat $design &
 
-			while [[ $(jobs -r | wc -l) -ge $maxJobs ]]; do
-				sleep 1
-			done
+			check_jobs
 
 		done
 
@@ -63,6 +71,4 @@ for subject in [0-9][0-9][0-9][0-9][0-9] ; do
 done
 
 # Wait for remaining jobs to finish
-while [[ $(jobs -r | wc -l) -gt 0 ]]; do
-  sleep 1
-done
+wait_finish

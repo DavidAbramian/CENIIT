@@ -8,8 +8,8 @@
 # 4. Run this script to Create RT struct files for tumor mask and brain activity maps
 
 
-for subject in [0-9][0-9][0-9][0-9][0-9] ; do
-# for subject in 17904 ; do
+# for subject in [0-9][0-9][0-9][0-9][0-9] ; do
+for subject in 17904 ; do
 
 
 	dirRT=$subject/dicom/${subject}_dicom_RTSTRUCT/

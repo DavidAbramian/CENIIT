@@ -264,6 +264,10 @@ def convert(input_nifti_path: str, input_dicom_path: str, output_dicom_path: str
     random_str_2 = "%0.8d" % random.randint(0,99999999)
     ds.SeriesInstanceUID = "1.2.826.0.1.3680043.2.1125."+random_str_1+".1"+random_str_2 # Just some random UID
 
+    # Rename series for identification in GammaPlan
+    ds.SeriesDescription = ROI_name
+
+    # Save RTSTRUCT file
     ds.save_as(output_dicom_path + ROI_name + "_RTSTRUCT.dcm")
 
 def get_parser():

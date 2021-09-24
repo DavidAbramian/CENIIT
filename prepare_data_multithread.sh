@@ -1,6 +1,16 @@
 #!/bin/bash
 
 maxJobs=6 # Max number of parallel jobs
+check_jobs () {
+	while [[ $(jobs -r | wc -l) -ge $maxJobs ]]; do
+		sleep 1
+	done
+}
+wait_finish () {
+	while [[ $(jobs -r | wc -l) -gt 0 ]]; do
+	  sleep 1
+	done
+}
 
 # Extract subject data
 echo "untaring files"
@@ -89,13 +99,9 @@ for subj in [0-9][0-9][0-9][0-9][0-9] ; do
   process_subj $subj &
 
   # Start a new job as soon as another one finishes
-  while [[ $(jobs -r | wc -l) -ge $maxJobs ]]; do
-    sleep 1
-  done
+  check_jobs
 
 done
 
 # Wait for remaining jobs to finish
-while [[ $(jobs -r | wc -l) -gt 0 ]]; do
-  sleep 1
-done
+wait_finish
